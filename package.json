@@ -1,0 +1,20 @@
+{
+  "name": "phagequest",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace apps/web",
+    "build": "npm run build --workspace apps/web",
+    "typecheck": "npm run typecheck --workspace apps/web",
+    "api": "uvicorn app.main:app --reload --app-dir apps/api",
+    "test:engine": "python -m pytest engine/tests -q",
+    "test:api": "python -m pytest apps/api/tests -q",
+    "test": "npm run test:engine && npm run test:api && npm run typecheck"
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0"
+  }
+}

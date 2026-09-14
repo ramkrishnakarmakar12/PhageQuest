@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push: { branches: [main] }
+  pull_request:
+
+jobs:
+  engine:
+    name: Engine (statistics, simulation, geometry, guards)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install -e engine[dev]
+      - name: Tests
+        run: pytest engine/tests -q
+      # The specification asks for the package-name traps and the licence
+      # posture to live "in CI as tests", not in a document. These run as part
+      # of the suite above; this step fails loudly if either file goes missing.
+      - name: Licence and name-collision guards are present
+        run: |
+          pytest engine/tests/test_honesty.py -q \
+            -k "package_name or copyleft or dependencies_are_clean"
+
+  api:
+    name: API
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install -e engine && pip install -e apps/api && pip install pytest
+      - run: pytest apps/api/tests -q
+
+  web:
+    name: Web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: npm }
+      - run: npm ci
+      - name: Regenerate the browser engine bundle
+        run: node scripts/build-engine-sources.mjs
+      - name: It must match what is committed
+        # Tier 0 and Tier 1 running the same source is the platform's load-bearing
+        # claim. If the generated bundle differs from the committed one, the
+        # browser is running stale statistics and CI must stop.
+        run: git diff --exit-code apps/web/src/lib/engineSources.ts
+      - run: npm run typecheck
+      - run: npm run build

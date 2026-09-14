@@ -1,0 +1,38 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "phagequest-engine"
+version = "0.1.0"
+description = "PhageQuest statistics, simulation and geometry engine. Every number is bound to an execution record."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Proprietary" }
+authors = [{ name = "Cheenta / Paninieight" }]
+
+# HARD CONSTRAINT (spec section 04 / 09):
+# Tier-0 dependencies must be (a) available in Pyodide and (b) BSD/MIT/PSF only.
+# No GPL (pingouin, igraph, leidenalg) and no AGPL (giotto-tda) may ever appear here.
+dependencies = [
+  "numpy>=1.26",
+  "scipy>=1.11",
+]
+
+[project.optional-dependencies]
+# Tier-1 only. Never imported by engine code that must run in the browser.
+server = [
+  "statsmodels>=0.14",
+  "pandas>=2.2",
+]
+dev = [
+  "pytest>=8.0",
+  "pytest-cov>=5.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/phagequest_engine"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["error::RuntimeWarning"]
